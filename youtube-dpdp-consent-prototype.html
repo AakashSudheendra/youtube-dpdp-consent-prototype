@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consent, by Design — YouTube × DPDP Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2A3B; --teal:#0FA39E; --teal-d:#0B7C78; --teal-tint:#E9F6F5;
+    --coral:#FF6B4A; --coral-tint:#FFEDE8; --amber:#F2A93B; --amber-tint:#FDF4E4;
+    --muted:#5E7180; --line:#E7EDF0; --bg:#F5F8F9; --white:#fff; --red:#FF3355;
+    --shadow:0 18px 50px rgba(9,32,45,.16);
+    --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--font); color:var(--ink);
+    background:
+      radial-gradient(1100px 600px at 82% -8%, rgba(15,163,158,.28), transparent 60%),
+      radial-gradient(900px 620px at 8% 108%, rgba(255,107,74,.16), transparent 55%),
+      linear-gradient(160deg,#0B2130 0%, #0E2A3B 45%, #0A3B41 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:28px 16px; gap:34px; flex-wrap:wrap;
+  }
+
+  /* ---------- side rail (intro / scenarios) ---------- */
+  .rail{width:300px; color:#DDE9EE}
+  .rail .eyebrow{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--teal)}
+  .rail h1{font-size:30px; line-height:1.08; font-weight:800; color:#fff; margin:10px 0 12px; letter-spacing:-.01em}
+  .rail p{font-size:13.5px; line-height:1.55; color:#AFC4CE}
+  .rail .sig{margin-top:22px; font-size:12.5px; color:#9FB6C1; line-height:1.5}
+  .rail .sig b{color:#fff}
+  .scen{margin-top:22px}
+  .scen .lab{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#7f99a5; margin-bottom:9px}
+  .chip{display:flex; align-items:center; gap:10px; width:100%; text-align:left; cursor:pointer;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); color:#EAF2F5;
+    padding:10px 12px; border-radius:12px; font-family:var(--font); font-size:13px; font-weight:600; margin-bottom:8px; transition:.16s}
+  .chip:hover{background:rgba(255,255,255,.11); border-color:rgba(15,163,158,.6); transform:translateX(2px)}
+  .chip .dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto}
+  .chip.happy .dot{background:var(--teal)} .chip.edge .dot{background:var(--coral)}
+  .chip.happy{border-color:rgba(15,163,158,.35)}
+  .legend{margin-top:18px; font-size:11.5px; color:#8fa7b2; line-height:1.9}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+
+  /* ---------- phone ---------- */
+  .device{width:392px; max-width:94vw}
+  .phone{position:relative; width:100%; background:var(--white); border-radius:42px; box-shadow:var(--shadow);
+    overflow:hidden; border:1px solid rgba(255,255,255,.5)}
+  .statusbar{display:flex; justify-content:space-between; align-items:center; padding:14px 26px 6px; font-size:12.5px; font-weight:700; color:var(--ink)}
+  .statusbar .dots{display:flex; gap:4px; align-items:center}
+  .statusbar .dots span{width:5px;height:5px;border-radius:50%;background:var(--ink);opacity:.7}
+  .statusbar .bat{width:22px;height:11px;border:1.5px solid var(--ink);border-radius:3px;position:relative;opacity:.8}
+  .statusbar .bat:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:var(--ink);border-radius:1px}
+  .statusbar .bat i{position:absolute;inset:1.5px;width:70%;background:var(--teal);border-radius:1px;display:block}
+
+  .owner{display:flex; align-items:center; gap:9px; margin:6px 16px 0; padding:9px 14px; border-radius:14px;
+    background:var(--teal-tint); font-size:12.5px; font-weight:700; color:var(--teal-d); transition:.25s}
+  .owner.parent{background:#EAF0F6; color:#33517a}
+  .owner .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;background:var(--teal)}
+  .owner.parent .av{background:#3E6099}
+  .owner .who{flex:1}
+  .owner .live{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+
+  .viewport{position:relative; min-height:610px}
+  .screen{display:none; padding:18px 22px 26px; animation:none}
+  .screen.active{display:block; animation:enter .34s cubic-bezier(.22,.7,.3,1)}
+  @keyframes enter{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)}}
+
+  .brandrow{display:flex; align-items:center; gap:9px; margin-bottom:16px}
+  .playmark{width:34px;height:24px;background:var(--red);border-radius:7px;display:grid;place-items:center;box-shadow:0 4px 10px rgba(255,51,85,.35)}
+  .playmark:after{content:"";border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+  .brandrow .bn{font-weight:800;font-size:16px;letter-spacing:-.02em}
+  .brandrow .bn span{color:var(--muted);font-weight:600}
+
+  .steps{display:flex;gap:6px;margin:0 0 16px}
+  .steps i{height:4px;flex:1;border-radius:3px;background:var(--line);transition:.3s}
+  .steps i.on{background:var(--teal)}
+
+  h2.h{font-size:23px; line-height:1.15; font-weight:800; letter-spacing:-.02em; margin-bottom:8px}
+  .lead{font-size:14px; line-height:1.55; color:var(--muted); margin-bottom:18px}
+  .lead b{color:var(--ink)}
+
+  .field{margin-bottom:14px}
+  .field label{display:block; font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px}
+  .input{width:100%; font-family:var(--font); font-size:15px; font-weight:600; color:var(--ink);
+    border:1.5px solid var(--line); border-radius:13px; padding:13px 14px; background:#fbfdfd; transition:.15s}
+  .input:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 4px var(--teal-tint)}
+  .hint{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.45}
+
+  .btn{width:100%; font-family:var(--font); font-size:15px; font-weight:700; border:none; border-radius:14px;
+    padding:15px; cursor:pointer; transition:.16s; display:flex; align-items:center; justify-content:center; gap:8px}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--teal); color:#fff; box-shadow:0 10px 22px rgba(15,163,158,.32)}
+  .btn-primary:hover{background:var(--teal-d)}
+  .btn-primary:focus-visible{outline:3px solid var(--amber); outline-offset:2px}
+  .btn-ghost{background:transparent; color:var(--muted); box-shadow:none; padding:12px}
+  .btn-ghost:hover{color:var(--ink)}
+  .btn-danger{background:var(--coral); color:#fff; box-shadow:0 10px 22px rgba(255,107,74,.28)}
+  .btn-danger:hover{filter:brightness(.96)}
+  .btn-line{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-line:hover{border-color:var(--muted)}
+  .stack>*+*{margin-top:9px}
+  .mt{margin-top:16px}
+
+  .card{border:1px solid var(--line); border-radius:16px; padding:15px; background:#fff}
+  .why{background:var(--teal-tint); border:none; border-radius:14px; padding:13px 15px; font-size:12.5px; line-height:1.5; color:var(--teal-d); margin-bottom:16px}
+  .why b{color:var(--teal-d)}
+
+  .infobox{display:flex; gap:12px; padding:15px; border-radius:15px; background:var(--amber-tint); margin-bottom:16px}
+  .infobox.teal{background:var(--teal-tint)}
+  .infobox.coral{background:var(--coral-tint)}
+  .infobox .ic{flex:0 0 auto}
+  .infobox .tx{font-size:12.5px; line-height:1.5; color:var(--ink)}
+  .infobox .tx b{display:block; margin-bottom:2px; font-size:13.5px}
+
+  /* data notice rows */
+  .langtog{display:flex; gap:4px; background:#EEF3F5; border-radius:11px; padding:3px; float:right; margin-top:-2px}
+  .langtog button{border:none; background:transparent; font-family:var(--font); font-size:12px; font-weight:700; color:var(--muted); padding:6px 12px; border-radius:9px; cursor:pointer}
+  .langtog button.on{background:#fff; color:var(--ink); box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .drow{display:flex; gap:12px; padding:13px 0; border-bottom:1px solid var(--line)}
+  .drow:last-child{border-bottom:none}
+  .drow .di{flex:0 0 auto; width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:var(--teal-tint)}
+  .drow.block .di{background:var(--coral-tint)}
+  .drow .dt{flex:1}
+  .drow .dt b{font-size:13.5px; display:block}
+  .drow .dt span{font-size:12px; color:var(--muted); line-height:1.4}
+  .drow .badge{align-self:center; font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; white-space:nowrap}
+  .badge.opt{background:#EEF3F5; color:var(--muted)} .badge.req{background:var(--teal-tint); color:var(--teal-d)}
+  .badge.blk{background:var(--coral-tint); color:#C0432A}
+
+  /* toggles */
+  .trow{display:flex; align-items:center; gap:13px; padding:14px 0; border-bottom:1px solid var(--line)}
+  .trow:last-child{border-bottom:none}
+  .trow .tt{flex:1}
+  .trow .tt b{font-size:13.5px; display:block}
+  .trow .tt span{font-size:11.5px; color:var(--muted); line-height:1.4}
+  .sw{width:46px; height:27px; border-radius:20px; background:#CFDAE0; position:relative; cursor:pointer; transition:.2s; flex:0 0 auto; border:none}
+  .sw:after{content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.2); transition:.2s}
+  .sw.on{background:var(--teal)} .sw.on:after{left:22px}
+  .sw.locked{background:var(--teal); opacity:.55; cursor:not-allowed} .sw.locked:after{left:22px}
+  .sw.blocked{background:#E3D6D2; cursor:not-allowed} .sw.blocked:after{left:3px}
+  .lawtag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#C0432A;background:var(--coral-tint);padding:3px 8px;border-radius:8px;margin-top:4px}
+
+  /* digilocker */
+  .dl{border:1.5px solid var(--line); border-radius:16px; padding:16px; text-align:center; background:linear-gradient(180deg,#fff,#F7FAFB)}
+  .dl .brand{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:15px;margin-bottom:4px}
+  .dl .locker{width:26px;height:26px;border-radius:7px;background:#1B57B0;display:grid;place-items:center}
+  .dl .gov{font-size:11px;color:var(--muted);margin-bottom:14px}
+  .otp{display:flex;gap:8px;justify-content:center;margin:14px 0}
+  .otp input{width:40px;height:48px;text-align:center;font-size:20px;font-weight:800;border:1.5px solid var(--line);border-radius:11px;font-family:var(--font)}
+  .otp input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-tint)}
+
+  /* success + audit */
+  .seal{width:66px;height:66px;border-radius:50%;background:var(--teal);display:grid;place-items:center;margin:6px auto 14px;box-shadow:0 12px 26px rgba(15,163,158,.4); animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+  .seal.coral{background:var(--coral);box-shadow:0 12px 26px rgba(255,107,74,.4)}
+  .seal.amber{background:var(--amber);box-shadow:0 12px 26px rgba(242,169,59,.4)}
+  .center{text-align:center}
+  .audit{margin-top:18px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .audit .ah{display:flex;align-items:center;gap:8px;padding:12px 15px;background:#F7FAFB;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--line)}
+  .audit .al{padding:6px 15px 12px}
+  .aitem{display:flex;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .aitem:last-child{border-bottom:none}
+  .aitem .ad{width:20px;height:20px;border-radius:50%;background:var(--teal-tint);display:grid;place-items:center;flex:0 0 auto;margin-top:1px}
+  .aitem.d .ad{background:var(--coral-tint)}
+  .aitem .atx{flex:1;font-size:12.5px;line-height:1.35}
+  .aitem .atx b{font-weight:700}
+  .aitem .ts{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+  .backhome{display:block;width:100%;text-align:center;margin-top:14px;font-size:12.5px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--font)}
+  .backhome:hover{color:var(--ink)}
+  .tinylink{background:none;border:none;color:var(--teal-d);font-weight:700;font-family:var(--font);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+  /* handoff overlay */
+  .handoff{position:absolute; inset:0; background:linear-gradient(160deg,#0E2A3B,#0A3B41); color:#fff; display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:20; text-align:center; padding:30px}
+  .handoff.show{display:flex; animation:enter .3s ease}
+  .handoff .ring{width:64px;height:64px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:var(--teal);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .handoff h3{font-size:18px;font-weight:800}
+  .handoff p{font-size:13px;color:#AFC4CE;max-width:230px;line-height:1.5}
+
+  .footnote{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.45}
+
+  @media (max-width:760px){ body{flex-direction:column; padding:18px 10px} .rail{width:392px;max-width:94vw} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDE RAIL ===================== -->
+  <aside class="rail">
+    <div class="eyebrow">Vedantu PM Assignment · Prototype</div>
+    <h1>Consent,<br>by Design.</h1>
+    <p>A DPDP-compliant parental-consent flow for a 14-year-old signing up to YouTube in India — built to feel effortless for the family.</p>
+    <div class="sig">Watch the flow hand off between <b>Aarav's phone</b> and <b>Meera's phone</b>, and see every action land in a live <b>consent audit trail</b>.</div>
+
+    <div class="scen">
+      <div class="lab">Start here</div>
+      <button class="chip happy" onclick="scenario('happy')"><span class="dot"></span> ▶ Happy path — teen (13–17)</button>
+      <div class="lab" style="margin-top:14px">Edge cases</div>
+      <button class="chip edge" onclick="scenario('under13')"><span class="dot"></span> Child under 13</button>
+      <button class="chip edge" onclick="scenario('fail')"><span class="dot"></span> Verification fails</button>
+      <button class="chip edge" onclick="scenario('decline')"><span class="dot"></span> Consent declined</button>
+      <button class="chip edge" onclick="scenario('withdraw')"><span class="dot"></span> Withdraw consent</button>
+      <button class="chip edge" onclick="scenario('delete')"><span class="dot"></span> Delete child's data</button>
+      <button class="chip edge" onclick="scenario('adult')"><span class="dot"></span> Adult (18+) — no gate</button>
+    </div>
+    <div class="legend">
+      <i style="background:var(--teal)"></i> Trust &amp; consent actions<br>
+      <i style="background:var(--coral)"></i> Caution &amp; decline states
+    </div>
+  </aside>
+
+  <!-- ===================== PHONE ===================== -->
+  <div class="device">
+    <div class="phone">
+      <div class="statusbar">
+        <span id="clock">9:41</span>
+        <div class="dots"><span></span><span></span><span></span><span style="opacity:.3"></span><div class="bat"><i></i></div></div>
+      </div>
+      <div class="owner" id="owner">
+        <div class="av" id="ownerAv">A</div>
+        <div class="who"><span id="ownerName">Aarav's phone</span></div>
+        <div class="live">● live</div>
+      </div>
+
+      <div class="viewport">
+        <!-- HOME -->
+        <section class="screen active" id="s_home">
+          <div class="brandrow"><div class="playmark"></div><div class="bn">YouTube <span>India</span></div></div>
+          <h2 class="h">Sign in to keep watching</h2>
+          <p class="lead">Save your history, subscribe to channels, and pick up where you left off.</p>
+          <div class="stack">
+            <button class="btn btn-primary" onclick="scenario('happy')">Create account ▶</button>
+            <button class="btn btn-line" onclick="show('s_home')">Sign in</button>
+          </div>
+          <div class="footnote">Pick a scenario from the left to explore the full flow and its edge cases.</div>
+        </section>
+
+        <!-- 1. NAME -->
+        <section class="screen" id="s_name">
+          <div class="steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="brandrow"><div class="playmark"></div><div class="bn">YouTube <span>India</span></div></div>
+          <h2 class="h">What should we call you?</h2>
+          <p class="lead">You can change this later in settings.</p>
+          <div class="field"><label>Your name</label><input class="input" id="teenName" value="Aarav" /></div>
+          <button class="btn btn-primary" onclick="show('s_age')">Continue</button>
+        </section>
+
+        <!-- 2. AGE GATE -->
+        <section class="screen" id="s_age">
+          <div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+          <h2 class="h">When's your birthday?</h2>
+          <p class="lead">We ask so we can keep younger viewers safe and follow India's data-protection law.</p>
+          <div class="field"><label>Date of birth</label><input type="date" class="input" id="dob" value="2010-05-14" max="2025-12-31"></div>
+          <div class="hint">Under 18? We'll ask a parent to approve before your account is created — it only takes a couple of minutes.</div>
+          <button class="btn btn-primary mt" onclick="ageGate()">Continue</button>
+        </section>
+
+        <!-- 2b. UNDER 13 -->
+        <section class="screen" id="s_under13">
+          <div class="infobox teal">
+            <div class="ic">🧸</div>
+            <div class="tx"><b>Let's set up a supervised experience</b>Because you're under 13, your account will run in a fully supervised mode — no ads, no tracking, and a parent stays in control. A parent still needs to approve.</div>
+          </div>
+          <h2 class="h">A parent will set this up with you</h2>
+          <p class="lead">We'll invite a parent or guardian to approve and choose your settings.</p>
+          <button class="btn btn-primary" onclick="show('s_invite')">Invite a parent</button>
+          <button class="backhome" onclick="goHome()">← Back to start</button>
+        </section>
+
+        <!-- 3. PAUSED -->
+        <section class="screen" id="s_paused">
+          <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <div class="infobox">
+            <div class="ic">⏸️</div>
+            <div class="tx"><b>Account paused — a parent needs to approve</b>You're under 18, so India's DPDP Act asks us to get a parent's verified consent before we create your account or use your data.</div>
+          </div>
+          <p class="lead">Nothing is saved yet. Invite a parent and you'll be watching in about two minutes.</p>
+          <button class="btn btn-primary" onclick="show('s_invite')">Invite a parent</button>
+          <button class="backhome" onclick="goHome()">← Back to start</button>
+        </section>
+
+        <!-- 4. INVITE -->
+        <section class="screen" id="s_invite">
+          <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+          <h2 class="h">Which parent should we ask?</h2>
+          <p class="lead">We'll send them a secure link to approve. No forwarding, no screenshots needed.</p>
+          <div class="field"><label>Parent's mobile number</label><input class="input" id="parentPhone" value="+91 98765 43210"></div>
+          <div class="field"><label>Parent's name (optional)</label><input class="input" value="Meera"></div>
+          <button class="btn btn-primary" onclick="sendLink()">Send secure link</button>
+        </section>
+
+        <!-- 4b. LINK SENT -->
+        <section class="screen" id="s_sent">
+          <div class="center">
+            <div class="seal teal">✓</div>
+            <h2 class="h">Link sent to your parent</h2>
+            <p class="lead">We've texted a secure approval link to <b id="sentTo">+91 ••••• •3210</b>. Ask them to tap it — this account will activate the moment they approve.</p>
+          </div>
+          <button class="btn btn-primary" onclick="handoff('parent','s_pintro')">Switch to parent's phone ▶</button>
+          <div class="footnote">In real life the parent opens this on their own device. We simulate the hand-off here.</div>
+        </section>
+
+        <!-- 5. PARENT INTRO -->
+        <section class="screen" id="s_pintro">
+          <div class="brandrow"><div class="playmark"></div><div class="bn">YouTube <span>· Parental approval</span></div></div>
+          <div class="infobox teal">
+            <div class="ic">👋</div>
+            <div class="tx"><b>Aarav has asked you to approve his account</b>You'll verify you're his parent, see exactly what data is used, and choose what's allowed. About 2 minutes.</div>
+          </div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-size:12.5px;line-height:1.7;color:var(--muted)">
+              <div>🔒 We'll verify your identity, not store your documents</div>
+              <div>🎯 Ads and tracking stay off for under-18s — always</div>
+              <div>↩️ You can change or withdraw consent anytime</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="show('s_verify')">Verify &amp; review</button>
+        </section>
+
+        <!-- 6. DIGILOCKER VERIFY -->
+        <section class="screen" id="s_verify">
+          <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+          <h2 class="h">Confirm you're an adult &amp; Aarav's parent</h2>
+          <p class="lead">We use <b>DigiLocker</b> to check your age and identity through the government's secure token — we never see or keep your documents.</p>
+          <div class="dl">
+            <div class="brand"><div class="locker">🔐</div> DigiLocker</div>
+            <div class="gov">Government of India · secure identity</div>
+            <div id="verifyIdle">
+              <button class="btn btn-primary" onclick="verifyStart()">Verify with DigiLocker</button>
+              <button class="btn btn-ghost" onclick="show('s_altverify')">Use another method</button>
+            </div>
+            <div id="verifyLoad" style="display:none;padding:14px 0">
+              <div class="ring" style="width:44px;height:44px;border:3px solid #e6eef0;border-top-color:var(--teal);border-radius:50%;margin:6px auto;animation:spin 1s linear infinite"></div>
+              <div style="font-size:12.5px;color:var(--muted);margin-top:10px">Confirming with DigiLocker…</div>
+            </div>
+          </div>
+          <div class="footnote" style="margin-top:16px">Demo controls: <button class="tinylink" onclick="verifyDone(true)">succeed</button> · <button class="tinylink" onclick="verifyDone(false)">simulate failure</button></div>
+        </section>
+
+        <!-- 6b. VERIFY FAILED -->
+        <section class="screen" id="s_vfail">
+          <div class="center">
+            <div class="seal coral">!</div>
+            <h2 class="h">We couldn't verify your identity</h2>
+            <p class="lead">The DigiLocker check didn't complete — usually the OTP expired or the details didn't match. Aarav's account stays paused and no data is used.</p>
+          </div>
+          <div class="stack">
+            <button class="btn btn-primary" onclick="show('s_verify')">Try DigiLocker again</button>
+            <button class="btn btn-line" onclick="show('s_altverify')">Verify with Aadhaar OTP instead</button>
+          </div>
+        </section>
+
+        <!-- 6c. ALT VERIFY (Aadhaar OTP) -->
+        <section class="screen" id="s_altverify">
+          <h2 class="h">Verify with Aadhaar OTP</h2>
+          <p class="lead">Enter the 6-digit code sent to the mobile linked to your Aadhaar. This confirms you're an adult — nothing more is stored.</p>
+          <div class="otp">
+            <input maxlength="1" value="4" inputmode="numeric"><input maxlength="1" value="8" inputmode="numeric"><input maxlength="1" value="1" inputmode="numeric"><input maxlength="1" value="9" inputmode="numeric"><input maxlength="1" value="0" inputmode="numeric"><input maxlength="1" value="2" inputmode="numeric">
+          </div>
+          <button class="btn btn-primary" onclick="verifyDone(true)">Confirm code</button>
+          <button class="backhome" onclick="show('s_verify')">← Back</button>
+        </section>
+
+        <!-- 7. NOTICE -->
+        <section class="screen" id="s_notice">
+          <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <div class="langtog">
+            <button id="lgEn" class="on" onclick="setLang('en')">EN</button>
+            <button id="lgHi" onclick="setLang('hi')">हिंदी</button>
+          </div>
+          <h2 class="h" id="nTitle">What we'll use — and why</h2>
+          <p class="lead" id="nLead">Plain and simple. Only what Aarav's account needs, in your language.</p>
+          <div class="card">
+            <div class="drow">
+              <div class="di">👤</div>
+              <div class="dt"><b id="n1t">Account basics</b><span id="n1s">Name &amp; birth date — to create and secure the account.</span></div>
+              <div class="badge req" id="n1b">Required</div>
+            </div>
+            <div class="drow">
+              <div class="di">▶️</div>
+              <div class="dt"><b id="n2t">Watch history</b><span id="n2s">To resume videos &amp; suggest similar ones. Optional.</span></div>
+              <div class="badge opt" id="n2b">Optional</div>
+            </div>
+            <div class="drow block">
+              <div class="di">🚫</div>
+              <div class="dt"><b id="n3t">Targeted ads &amp; tracking</b><span id="n3s">Blocked for under-18s — never used.</span></div>
+              <div class="badge blk" id="n3b">Blocked</div>
+            </div>
+          </div>
+          <button class="btn btn-primary mt" onclick="noticeSeen()" id="nBtn">See the choices you control</button>
+        </section>
+
+        <!-- 8. GRANULAR CONSENT -->
+        <section class="screen" id="s_choices">
+          <h2 class="h">Your choices for Aarav</h2>
+          <p class="lead">Turn things on or off. You can change these anytime.</p>
+          <div class="card">
+            <div class="trow">
+              <div class="tt"><b>Essential account data</b><span>Needed to run the account securely.</span></div>
+              <button class="sw locked" aria-label="Required, always on"></button>
+            </div>
+            <div class="trow">
+              <div class="tt"><b>Personalised recommendations</b><span>Suggest videos from what Aarav watches.</span></div>
+              <button class="sw" id="swRec" onclick="toggleRec()" aria-label="Personalised recommendations"></button>
+            </div>
+            <div class="trow">
+              <div class="tt"><b>Targeted advertising</b><span>Not available for under-18s.<div class="lawtag">⚖️ Blocked by DPDP</div></span></div>
+              <button class="sw blocked" aria-label="Blocked by law" disabled></button>
+            </div>
+            <div class="trow">
+              <div class="tt"><b>Behavioural tracking</b><span>Not available for under-18s.<div class="lawtag">⚖️ Blocked by DPDP</div></span></div>
+              <button class="sw blocked" aria-label="Blocked by law" disabled></button>
+            </div>
+          </div>
+          <div class="stack mt">
+            <button class="btn btn-primary" onclick="approve()">Approve &amp; activate account</button>
+            <button class="btn btn-ghost" onclick="show('s_declined')" style="color:var(--coral)">Decline</button>
+          </div>
+        </section>
+
+        <!-- 8b. DECLINED -->
+        <section class="screen" id="s_declined">
+          <div class="center">
+            <div class="seal coral">✕</div>
+            <h2 class="h">You've declined — nothing was saved</h2>
+            <p class="lead">Aarav's account won't be created and none of his data will be processed. He can browse signed-out, or ask you again later.</p>
+          </div>
+          <div class="stack">
+            <button class="btn btn-line" onclick="show('s_choices')">Review the choices again</button>
+            <button class="btn btn-ghost" onclick="goHome()">Done</button>
+          </div>
+          <div class="audit" id="declineAudit" style="margin-top:18px"></div>
+        </section>
+
+        <!-- 9. SUCCESS -->
+        <section class="screen" id="s_success">
+          <div class="center">
+            <div class="seal">✓</div>
+            <h2 class="h">Approved — Aarav's account is live</h2>
+            <p class="lead">He can start watching now. Ads and tracking are off, and you're in control.</p>
+          </div>
+          <div class="audit" id="successAudit"></div>
+          <button class="btn btn-primary mt" onclick="show('s_manage')">Manage consent</button>
+          <button class="backhome" onclick="goHome()">← Restart prototype</button>
+        </section>
+
+        <!-- 10. MANAGE -->
+        <section class="screen" id="s_manage">
+          <div class="brandrow"><div class="playmark"></div><div class="bn">YouTube <span>· Consent settings</span></div></div>
+          <h2 class="h">Aarav's consent</h2>
+          <p class="lead">Withdrawing is as easy as giving — one tap, and it takes effect right away.</p>
+          <div class="card" style="margin-bottom:14px">
+            <div class="trow"><div class="tt"><b>Personalised recommendations</b><span id="mgRec">On</span></div><button class="sw on" id="swRec2" onclick="toggleRec2()"></button></div>
+            <div class="trow"><div class="tt"><b>Verified parent</b><span>Meera · via DigiLocker</span></div><span class="badge req">Verified</span></div>
+          </div>
+          <div class="stack">
+            <button class="btn btn-line" onclick="show('s_withdraw')" style="color:var(--coral);border-color:var(--coral-tint)">Withdraw consent</button>
+            <button class="btn btn-ghost" onclick="show('s_delete')">Delete Aarav's data</button>
+          </div>
+          <button class="backhome" onclick="show('s_success')">← Back</button>
+        </section>
+
+        <!-- 10a. WITHDRAW -->
+        <section class="screen" id="s_withdraw">
+          <div class="infobox coral">
+            <div class="ic">↩️</div>
+            <div class="tx"><b>Withdraw consent?</b>Aarav's account will pause and we'll stop using his data. You can approve again anytime.</div>
+          </div>
+          <div class="stack">
+            <button class="btn btn-danger" onclick="doWithdraw()">Yes, withdraw consent</button>
+            <button class="btn btn-ghost" onclick="show('s_manage')">Keep it active</button>
+          </div>
+        </section>
+
+        <!-- 10a-done -->
+        <section class="screen" id="s_withdrawn">
+          <div class="center">
+            <div class="seal amber">↩</div>
+            <h2 class="h">Consent withdrawn</h2>
+            <p class="lead">We've stopped processing Aarav's data and paused his account. It's logged below.</p>
+          </div>
+          <div class="audit" id="withdrawAudit"></div>
+          <button class="backhome mt" onclick="goHome()">← Restart prototype</button>
+        </section>
+
+        <!-- 10b. DELETE -->
+        <section class="screen" id="s_delete">
+          <div class="infobox coral">
+            <div class="ic">🗑️</div>
+            <div class="tx"><b>Delete all of Aarav's data?</b>This erases his account and everything we hold. It can't be undone.</div>
+          </div>
+          <div class="stack">
+            <button class="btn btn-danger" onclick="doDelete()">Request deletion</button>
+            <button class="btn btn-ghost" onclick="show('s_manage')">Cancel</button>
+          </div>
+        </section>
+
+        <!-- 10b-done -->
+        <section class="screen" id="s_deleted">
+          <div class="center">
+            <div class="seal amber">🗑</div>
+            <h2 class="h">Deletion requested</h2>
+            <p class="lead">We'll erase Aarav's data within 30 days and email you a confirmation. Some records may be kept only where the law requires.</p>
+          </div>
+          <div class="audit" id="deleteAudit"></div>
+          <button class="backhome mt" onclick="goHome()">← Restart prototype</button>
+        </section>
+
+        <!-- ADULT -->
+        <section class="screen" id="s_adult">
+          <div class="center">
+            <div class="seal">✓</div>
+            <h2 class="h">You're all set</h2>
+            <p class="lead">You're 18 or older, so no parental approval is needed. Standard consent applies and your account is ready.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goHome()">Start watching</button>
+          <div class="footnote">The age gate quietly routes adults straight through — the extra flow only appears for under-18s.</div>
+        </section>
+
+        <div class="handoff" id="handoff">
+          <div class="ring"></div>
+          <h3 id="hoTitle">Handing over to Meera…</h3>
+          <p id="hoText">In reality the parent opens the secure link on their own phone. We're switching the view for you.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footnote" style="color:#9FB6C1">Self-contained demo · no data leaves this page · mock verification</div>
+  </div>
+
+<script>
+  const S = { age:15, rec:false, lang:'en', log:[] };
+  function reduced(){ return typeof window.matchMedia==='function' && window.matchMedia('(prefers-reduced-motion:reduce)').matches; }
+
+  function now(){
+    const d=new Date();
+    const t=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    const dt=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return t+' · '+dt;
+  }
+  // live-ish clock
+  (function tick(){ const c=document.getElementById('clock'); if(c){ c.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false}); } setTimeout(tick,15000); })();
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el=document.getElementById(id); el.classList.add('active');
+    el.querySelector('.viewport'); // noop
+    const vp=document.querySelector('.viewport'); if(vp) vp.scrollTop=0;
+  }
+
+  function setOwner(who){
+    const o=document.getElementById('owner'), av=document.getElementById('ownerAv'), nm=document.getElementById('ownerName');
+    if(who==='parent'){ o.classList.add('parent'); av.textContent='M'; nm.textContent="Meera's phone"; }
+    else { o.classList.remove('parent'); av.textContent='A'; nm.textContent="Aarav's phone"; }
+  }
+
+  function handoff(who, next){
+    const h=document.getElementById('handoff');
+    document.getElementById('hoTitle').textContent = who==='parent' ? 'Handing over to Meera…' : 'Back to Aarav…';
+    document.getElementById('hoText').textContent = who==='parent'
+      ? 'In reality the parent opens the secure link on their own phone. We\u2019re switching the view for you.'
+      : 'Approval done. Passing the phone back to Aarav.';
+    h.classList.add('show');
+    const delay = reduced() ? 200 : 1300;
+    setTimeout(()=>{ h.classList.remove('show'); setOwner(who); show(next); }, delay);
+  }
+
+  function goHome(){
+    S.age=15; S.rec=false; S.lang='en'; S.log=[]; S.noticeLogged=false;
+    setOwner('aarav'); setLang('en'); syncRec();
+    show('s_home');
+  }
+
+  function scenario(name){
+    S.rec=false; S.log=[]; S.noticeLogged=false; setOwner('aarav'); setLang('en'); syncRec();
+    if(name==='happy'){ document.getElementById('dob').value='2010-05-14'; show('s_name'); }
+    else if(name==='adult'){ setOwner('aarav'); show('s_adult'); }
+    else if(name==='under13'){ S.age=10; document.getElementById('dob').value='2015-08-02'; show('s_age'); }
+    else if(name==='fail'){ setOwner('parent'); show('s_verify'); }
+    else if(name==='decline'){ setOwner('parent'); logCore(); show('s_choices'); }
+    else if(name==='withdraw'){ setOwner('parent'); logCore(); S.log.push({t:'Consent granted · Recommendations off · Ads blocked', ts:now()}); show('s_manage'); }
+    else if(name==='delete'){ setOwner('parent'); logCore(); S.log.push({t:'Consent granted · Recommendations off · Ads blocked', ts:now()}); show('s_manage'); }
+  }
+
+  function ageGate(){
+    const dob=new Date(document.getElementById('dob').value);
+    if(isNaN(dob)){ show('s_paused'); return; }
+    const diff=Date.now()-dob.getTime();
+    const age=Math.floor(diff/(365.25*24*3600*1000));
+    S.age=age;
+    if(age<13){ show('s_under13'); }
+    else if(age<18){ show('s_paused'); }
+    else { show('s_adult'); }
+  }
+
+  function sendLink(){
+    const p=document.getElementById('parentPhone').value.trim();
+    const masked = p.length>4 ? '+91 ••••• •'+p.replace(/\D/g,'').slice(-4,-1)+p.replace(/\D/g,'').slice(-1) : p;
+    document.getElementById('sentTo').textContent = masked;
+    S.log.push({t:'Parental approval link sent to '+masked, ts:now()});
+    show('s_sent');
+  }
+
+  // verification
+  function verifyStart(){
+    document.getElementById('verifyIdle').style.display='none';
+    document.getElementById('verifyLoad').style.display='block';
+    const t=reduced()?300:1500;
+    setTimeout(()=>verifyDone(true), t);
+  }
+  function verifyDone(ok){
+    document.getElementById('verifyIdle').style.display='block';
+    document.getElementById('verifyLoad').style.display='none';
+    if(ok){ S.log.push({t:'Parent identity verified · DigiLocker', ts:now()}); show('s_notice'); }
+    else { show('s_vfail'); }
+  }
+
+  // language
+  const HI={
+    title:'हम क्या इस्तेमाल करेंगे — और क्यों',
+    lead:'सरल और स्पष्ट। केवल वही जो आरव के खाते के लिए ज़रूरी है, आपकी भाषा में।',
+    n1t:'खाता जानकारी', n1s:'नाम और जन्मतिथि — खाता बनाने और सुरक्षित रखने के लिए।', n1b:'ज़रूरी',
+    n2t:'देखा गया इतिहास', n2s:'वीडियो फिर से शुरू करने और सुझाव देने के लिए। वैकल्पिक।', n2b:'वैकल्पिक',
+    n3t:'टार्गेटेड विज्ञापन और ट्रैकिंग', n3s:'18 वर्ष से कम उम्र के लिए अवरुद्ध — कभी उपयोग नहीं।', n3b:'अवरुद्ध',
+    btn:'अपने नियंत्रण वाले विकल्प देखें'
+  };
+  const EN={
+    title:'What we\u2019ll use — and why',
+    lead:'Plain and simple. Only what Aarav\u2019s account needs, in your language.',
+    n1t:'Account basics', n1s:'Name & birth date — to create and secure the account.', n1b:'Required',
+    n2t:'Watch history', n2s:'To resume videos & suggest similar ones. Optional.', n2b:'Optional',
+    n3t:'Targeted ads & tracking', n3s:'Blocked for under-18s — never used.', n3b:'Blocked',
+    btn:'See the choices you control'
+  };
+  function setLang(l){
+    S.lang=l; const D = l==='hi'?HI:EN;
+    document.getElementById('lgEn').classList.toggle('on', l==='en');
+    document.getElementById('lgHi').classList.toggle('on', l==='hi');
+    for(const k of ['n1t','n1s','n1b','n2t','n2s','n2b','n3t','n3s','n3b']){ const e=document.getElementById(k); if(e) e.textContent=D[k]; }
+    document.getElementById('nTitle').textContent=D.title;
+    document.getElementById('nLead').textContent=D.lead;
+    document.getElementById('nBtn').textContent=D.btn;
+  }
+
+  // toggles
+  function syncRec(){ const a=document.getElementById('swRec'); if(a) a.classList.toggle('on',S.rec); }
+  function toggleRec(){ S.rec=!S.rec; syncRec(); }
+  function toggleRec2(){
+    S.rec=!S.rec;
+    document.getElementById('swRec2').classList.toggle('on',S.rec);
+    document.getElementById('mgRec').textContent=S.rec?'On':'Off';
+    S.log.push({t:'Setting changed · Recommendations '+(S.rec?'on':'off'), ts:now()});
+  }
+
+  function logCore(){
+    S.log.push({t:'Parental approval link sent to +91 ••••• •3210', ts:now()});
+    S.log.push({t:'Parent identity verified · DigiLocker', ts:now()});
+    S.log.push({t:'Consent notice shown · '+(S.lang==='hi'?'Hindi':'English'), ts:now()});
+  }
+
+  // audit rendering
+  function renderAudit(target, extra){
+    const items = extra ? S.log.concat(extra) : S.log;
+    let html='<div class="ah">🧾 Consent audit trail</div><div class="al">';
+    items.forEach(it=>{
+      html+='<div class="aitem'+(it.d?' d':'')+'"><div class="ad">'+(it.d?'●':'✓')+'</div><div class="atx"><b>'+it.t+'</b><div class="ts">'+it.ts+'</div></div></div>';
+    });
+    html+='</div>';
+    document.getElementById(target).innerHTML=html;
+  }
+
+  function noticeSeen(){
+    if(!S.noticeLogged){ S.log.push({t:'Consent notice shown · '+(S.lang==='hi'?'Hindi':'English'), ts:now()}); S.noticeLogged=true; }
+    show('s_choices');
+  }
+  function approve(){
+    S.log.push({t:'Consent granted · Recommendations '+(S.rec?'on':'off')+' · Targeted ads blocked', ts:now()});
+    renderAudit('successAudit');
+    handoff('aarav','s_success');
+  }
+
+  function doWithdraw(){
+    const extra=[{t:'Consent withdrawn by parent · processing stopped', ts:now(), d:true}];
+    renderAudit('withdrawAudit', extra);
+    show('s_withdrawn');
+  }
+  function doDelete(){
+    const extra=[{t:'Data-deletion requested · erase within 30 days', ts:now(), d:true}];
+    renderAudit('deleteAudit', extra);
+    show('s_deleted');
+  }
+
+  // decline needs an audit too
+  const _show=show;
+  window.show=function(id){
+    _show(id);
+    if(id==='s_declined'){
+      const extra=[{t:'Consent declined by parent · no data processed', ts:now(), d:true}];
+      renderAudit('declineAudit', extra);
+    }
+    if(id==='s_manage'){ document.getElementById('swRec2').classList.toggle('on',S.rec); document.getElementById('mgRec').textContent=S.rec?'On':'Off'; }
+  };
+</script>
+</body>
+</html>
