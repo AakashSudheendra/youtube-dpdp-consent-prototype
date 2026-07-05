@@ -2,7 +2,7 @@
 
 A clickable prototype for Vedantu's Product Management Intern assignment: designing a DPDP Act (2023)–compliant parental-consent experience for YouTube's under-18 users in India — without driving families away with friction.
 
-**🔗 Live demo:** _add your GitHub Pages link here after deployment_
+**🔗 Live demo:** https://youtube-dpdp-consent-prototype.netlify.app/youtube-dpdp-consent-prototype.html
 **📊 Product Thinking Deck:** `YouTube_DPDP_Consent_Deck.pptx` (in this repo)
 
 ---
